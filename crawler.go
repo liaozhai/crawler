@@ -2,20 +2,21 @@ package crawler
 
 import "github.com/liaozhai/set"
 
-type Interface[T comparable] interface {
-	Value() T
-	Nodes() []T
+// K - key type, V - value type
+type Interface[K comparable, V any] interface {
+	Value() V
+	Nodes() []K
 }
 
-type Transformer[T comparable] func(t T) Interface[T]
+type Transformer[K comparable, V any] func(t K) Interface[K, V]
 
-func run[T comparable](seed T, depth int, transform Transformer[T], st *set.Set[T]) []T {
+func run[K comparable, V any](seed K, depth int, transform Transformer[K, V], st *set.Set[K]) []V {
 	if depth <= 0 || st.Has(seed) {
 		return nil
 	}
 	st.Add(seed)
-	ch := make(chan T)
-	go func(x T) {
+	ch := make(chan V)
+	go func(x K) {
 		defer close(ch)
 		t := transform(x)
 		v := t.Value()
@@ -28,13 +29,13 @@ func run[T comparable](seed T, depth int, transform Transformer[T], st *set.Set[
 		}
 	}(seed)
 
-	a := []T{}
+	a := []V{}
 	for s := range ch {
 		a = append(a, s)
 	}
 	return a
 }
 
-func Crawl[T comparable](seed T, depth int, transform Transformer[T]) []T {
-	return run(seed, depth, transform, set.New[T]())
+func Crawl[K comparable, V any](seed K, depth int, transform Transformer[K, V]) []V {
+	return run(seed, depth, transform, set.New[K]())
 }
