@@ -1,6 +1,10 @@
 package crawler
 
-import "github.com/liaozhai/set"
+import (
+	"sync"
+
+	"github.com/liaozhai/set"
+)
 
 // K - key type, V - value type
 type Interface[K comparable, V any] interface {
@@ -10,32 +14,24 @@ type Interface[K comparable, V any] interface {
 
 type Transformer[K comparable, V any] func(t K) Interface[K, V]
 
-func run[K comparable, V any](seed K, depth int, transform Transformer[K, V], st *set.Set[K]) []V {
-	if depth <= 0 || st.Has(seed) {
-		return nil
+func run[K comparable, V any](seed K, depth int, transform Transformer[K, V], st *set.Set[K], wg *sync.WaitGroup, out chan V) {
+	t := transform(seed)
+	defer wg.Done()
+	for _, n := range t.Nodes() {
+		wg.Add(1)
+		go run(n, depth-1, transform, st, wg, out)
 	}
-	st.Add(seed)
-	ch := make(chan V)
-	go func(x K) {
-		defer close(ch)
-		t := transform(x)
-		v := t.Value()
-		ch <- v
-		for _, v := range t.Nodes() {
-			b := run(v, depth-1, transform, st)
-			for _, s := range b {
-				ch <- s
-			}
-		}
-	}(seed)
-
-	a := []V{}
-	for s := range ch {
-		a = append(a, s)
-	}
-	return a
+	out <- t.Value()
 }
 
-func Crawl[K comparable, V any](seed K, depth int, transform Transformer[K, V]) []V {
-	return run(seed, depth, transform, set.New[K]())
+func Crawl[K comparable, V any](seed K, depth int, transform Transformer[K, V]) chan V {
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	out := make(chan V)
+	go run(seed, depth, transform, set.New[K](), wg, out)
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+	return out
 }
