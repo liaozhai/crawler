@@ -29,14 +29,12 @@ func run[K comparable, V any](key K, depth int, transform Transformer[K, V], st 
 	out <- Result[K, V]{key, t.Value()}
 }
 
-func Crawl[K comparable, V any](seed K, depth int, transform Transformer[K, V]) chan Result[K, V] {
+func Crawl[K comparable, V any](seed K, depth int, transform Transformer[K, V], out chan Result[K, V]) {
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
-	out := make(chan Result[K, V])
 	go run(seed, depth, transform, set.New[K](), wg, out)
 	go func() {
 		wg.Wait()
 		close(out)
 	}()
-	return out
 }
