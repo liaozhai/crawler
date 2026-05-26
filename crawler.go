@@ -20,12 +20,12 @@ type Result[K comparable, V any] struct {
 }
 
 func run[K comparable, V any](key K, depth int, transform Transformer[K, V], st *set.Set[K], wg *sync.WaitGroup, out chan Result[K, V]) {
+	defer wg.Done()
 	if st.Has(key) {
 		return
 	}
 	st.Add(key)
 	t := transform(key)
-	defer wg.Done()
 	for _, n := range t.Keys() {
 		wg.Add(1)
 		go run(n, depth-1, transform, st, wg, out)
