@@ -5,12 +5,12 @@ import (
 )
 
 // K - key type, V - value type
-type Interface[K comparable, V any] interface {
+type Vertice[K comparable, V any] interface {
 	Value() V
 	Keys() []K
 }
 
-type Transformer[K comparable, V any] func(t K) Interface[K, V]
+type Transformer[K comparable, V any] func(t K) Vertice[K, V]
 
 type Result[K comparable, V any] struct {
 	Key   K
