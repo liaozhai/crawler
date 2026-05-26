@@ -2,8 +2,6 @@ package crawler
 
 import (
 	"sync"
-
-	"github.com/liaozhai/set"
 )
 
 // K - key type, V - value type
@@ -19,12 +17,12 @@ type Result[K comparable, V any] struct {
 	Value V
 }
 
-func run[K comparable, V any](key K, depth int, transform Transformer[K, V], st *set.Set[K], wg *sync.WaitGroup, out chan Result[K, V]) {
+func run[K comparable, V any](key K, depth int, transform Transformer[K, V], st *sync.Map, wg *sync.WaitGroup, out chan Result[K, V]) {
 	defer wg.Done()
-	if st.Has(key) {
+	if _, ok := st.Load(key); !ok {
 		return
 	}
-	st.Add(key)
+	st.Store(key, struct{}{})
 	t := transform(key)
 	for _, n := range t.Keys() {
 		wg.Add(1)
@@ -36,7 +34,7 @@ func run[K comparable, V any](key K, depth int, transform Transformer[K, V], st 
 func Crawl[K comparable, V any](seed K, depth int, transform Transformer[K, V], out chan Result[K, V]) {
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
-	go run(seed, depth, transform, set.New[K](), wg, out)
+	go run(seed, depth, transform, &sync.Map{}, wg, out)
 	go func() {
 		wg.Wait()
 		close(out)
