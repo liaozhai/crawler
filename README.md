@@ -21,12 +21,12 @@ Traversing (i.e. "crawling") a graph means visiting all its vertices. Some real 
 To implement necessary behavior we need to write a transformation function, which signature is described by the following types:
 
 ```go
-type Interface[K comparable, V any] interface {
+type Vertice[K comparable, V any] interface {
 	Value() V
 	Keys() []K
 }
 
-type Transformer[K comparable, V any] func(t K) Interface[K, V]
+type Transformer[K comparable, V any] func(t K) Vertice[K, V]
 ```
 This function takes the current vertice's key and returns a value, which can be used to obtain keys of adjacent vertices as well as the value, associated with the current vertice. Calling this function actually performs traversing from one vertice to several others. The crawler carries out this task in parallel.
 
