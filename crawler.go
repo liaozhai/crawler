@@ -19,7 +19,7 @@ type Result[K comparable, V any] struct {
 
 func run[K comparable, V any](key K, depth int, transform Transformer[K, V], st *sync.Map, wg *sync.WaitGroup, out chan Result[K, V]) {
 	defer wg.Done()
-	if _, ok := st.Load(key); !ok {
+	if _, ok := st.Load(key); ok {
 		return
 	}
 	st.Store(key, struct{}{})
