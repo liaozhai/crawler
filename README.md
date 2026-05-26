@@ -38,7 +38,7 @@ crawler.Crawl(base, depth, transform, out)
 where
 - base - key of the initial vertice, from which the crawling process starts
 - depth - crawling depth - the number of hops between the vertices
-- transfrom - our transformation function
+- transform - our transformation function
 - out - channel of type ```Result[K,V]```
 
 For the web crawler implementation see https://github.com/liaozhai/web
