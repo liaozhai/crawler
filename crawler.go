@@ -27,11 +27,11 @@ func run[K comparable, V any](key K, depth int, transform Transformer[K, V], st 
 		return
 	}
 	st.Store(key, struct{}{})
+	out <- Result[K, V]{key, t.Value()}
 	for _, n := range t.Keys() {
 		wg.Add(1)
 		go run(n, depth-1, transform, st, wg, out)
 	}
-	out <- Result[K, V]{key, t.Value()}
 }
 
 func Crawl[K comparable, V any](seed K, depth int, transform Transformer[K, V], out chan Result[K, V]) {
