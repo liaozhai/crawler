@@ -10,7 +10,7 @@ type Vertice[K comparable, V any] interface {
 	Keys() []K
 }
 
-type Transformer[K comparable, V any] func(t K) Vertice[K, V]
+type Transformer[K comparable, V any] func(t K) (Vertice[K, V], error)
 
 type Result[K comparable, V any] struct {
 	Key   K
@@ -22,8 +22,11 @@ func run[K comparable, V any](key K, depth int, transform Transformer[K, V], st 
 	if _, ok := st.Load(key); ok {
 		return
 	}
+	t, err := transform(key)
+	if err != nil {
+		return
+	}
 	st.Store(key, struct{}{})
-	t := transform(key)
 	for _, n := range t.Keys() {
 		wg.Add(1)
 		go run(n, depth-1, transform, st, wg, out)
