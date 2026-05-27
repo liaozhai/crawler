@@ -33,14 +33,13 @@ func run[K comparable, V any](key K, depth int, transform Transformer[K, V], lck
 		lck.mu.Unlock()
 		return
 	}
+	lck.cache[key] = struct{}{}
+	lck.mu.Unlock()
 	t, err := transform(key)
 	if err != nil {
-		lck.mu.Unlock()
 		return
 	}
-	lck.cache[key] = struct{}{}
 	out <- Result[K, V]{key, t.Value()}
-	lck.mu.Unlock()
 	for _, n := range t.Keys() {
 		wg.Add(1)
 		go run(n, depth-1, transform, lck, wg, out)
